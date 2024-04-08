@@ -1,0 +1,77 @@
+/**
+ * @ Author: Keila Emy Taniguchi
+ * @ Create Time: 2024-04-07 22:45:52
+ * @ Description: Projeto POUI TOTVS
+ */
+
+#include "tlpp-core.th"
+#include "FWMVCDEF.CH"
+
+namespace owners //identificação do fonte
+
+//FWAdapterBaseV2: Classe base para criação de adapters utilizados em serviços REST 
+//suportando filtros de paginação e filtros baseados no padrão oData.
+//https://tdn.totvs.com/display/public/framework/09.+FWAdapterBaseV2
+
+Class OwnersData From FWAdapterBaseV2 
+
+    Public method new() as Object
+    Public method get()
+
+EndClass
+
+Method new(as Character) as Object Class OwnersData
+
+    //Método construtor da classe
+    _Super:new(cVerb,.T.) //Parametros: Verbo Rest utilizado no adapter; Se irá listar o json
+
+Return Self
+
+Static Function AddMapFields(oSelf as Object)
+
+    //Adiciona campo a campo as configurações de campos utilizado no Adapter
+    oSelf:AddMapFields("id"   , "ZSB_ID"   , .T.,.T.,{"ZSB_ID"   , "C", tamsx3('ZSB_ID')[1]   , 0})
+    oSelf:AddMapFields("name" , "ZSB_NAME" , .T.,.F.,{"ZSB_NAME" , "C", tamsx3('ZSB_NAME')[1] , 0})
+    oSelf:AddMapFields("rg"   , "ZSB_RG"   , .T.,.F.,{"ZSB_RG"   , "C", tamsx3('ZSB_RG')[1]   , 0})
+    oSelf:AddMapFields("cpf"  , "ZSB_CPF"  , .T.,.F.,{"ZSB_CPF"  , "C", tamsx3('ZSB_CPF')[1]  , 0})
+    oSelf:AddMapFields("email", "ZSB_EMAIL", .T.,.F.,{"ZSB_EMAIL", "C", tamsx3('ZSB_EMAIL')[1], 0})
+    oSelf:AddMapFields("tel1" , "ZSB_TEL1" , .T.,.F.,{"ZSB_TEL1" , "C", tamsx3('ZSB_TEL1')[1] , 0})
+    oSelf:AddMapFields("tel2" , "ZSB_TEL2" , .T.,.F.,{"ZSB_TEL2" , "C", tamsx3('ZSB_TEL2')[1] , 0})
+
+    //Parametros AddMapFields:
+    //1 - cFieldJson	Carácter	Nome do campo no objeto Json
+    //2 - cFieldQuery	Carácter	Nome do campo que será utilizado no ResultSet
+    //3 - lJsonField	Lógico	    Se .T. informa que o campo será exportado ao Json
+    //4 - lFixed        Lógico	    Se .T. informa que o campo não pode ser removido pelo FIELDS do QueryParam
+    //5 - aStruct       Array	    Vetor com a estrutura do campo no padrão {"CAMPO", "TIPO", Tamanho, Decimal}, caso não seja informada a estrutura, utiliza como base o dicionário SX3
+    //6 - cRenameField	Carácter	Determina o nome real do campo na tabela, para o caso de identificadores ambíguos na query
+
+Return Nil
+
+//nPage - Pagina a ser retornada; nPageSize quantidade de registros por pagina; 
+//cFilter queryParam dos Filter; cFilds campos; cSort ordem; cOwnerId retorno pelo Id;
+Method get(nPage as Numeric, nPageSize as Numeric, cFilter as Character,;
+           cFilds as Character, cSort as Character, cOwnerId as Character) Class OwnersData
+
+    Local aArea as Array
+    Local cWhere as Character
+    Local aFilter := {} as Array
+
+    cWhere := " ZSB_FILIAL = '" + FWXFilial('ZSB') + "' AND D_E_L_E_T_ = '' "
+
+    aArea := FWGetArea()
+
+    AddMapFields(self) //DePara campos
+
+    //Chamada de Metodos da Classe da FWAdapterBaseV2
+    ::SetPage(nPage)
+    ::SetPageSize(nPageSize)
+    ::SetQuery(utils.getQuery('ZSB'))
+    ::SetWhere(cWhere)
+    ::SetOrder('ZSB_FILIAL','ZSB_ID')
+
+    if ::Execute() //Realiza o parse dos ids #QueryFields# e #QueryWhere# gerando o ResultSet
+        ::FilGetResponse() //Método chamado linha a linha do ResultSet para geração do Json
+    endif
+
+Return Nil

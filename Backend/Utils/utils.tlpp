@@ -1,0 +1,22 @@
+/**
+ * @ Author: Keila Emy Taniguchi
+ * @ Create Time: 2024-04-07 23:27:13
+ * @ Description: Projeto POUI TOTVS
+ */
+
+#include "tlpp-core.th"
+#include "FWMVCDEF.CH"
+
+namespace utils
+
+Function getQuery(cTable as Character) as Character
+
+    Local cQuery as Character
+
+    //#QueryFields# Retorna todos os campos descritos na AddMapFields 
+    //#QueryWhere# Retorna a query descrita no SetWhere
+
+    cQuery :=  " SELECT #QueryFields# FROM " + RetSqlName(cTable) + " " + cTable
+    cQuery :=  " WHERE #QueryWhere# "
+
+Return cQuery
