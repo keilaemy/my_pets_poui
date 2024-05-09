@@ -1,0 +1,115 @@
+/**
+ * @ Author: Keila Emy Taniguchi
+ * @ Create Time: 2024-05-05 16:04:59
+ * @ Description: Projeto POUI TOTVS
+*/
+
+#include "tlpp-core.th"
+#include "FWMVCDEF.CH"
+
+namespace owners //identificação do fonte
+
+Class OwnersController
+
+    Data jResponse as Json
+    Data oService as Object
+
+    Public method new() as Object
+
+    @Get('api/v1/owners')
+    Public method get() as Logical
+
+    @Get('api/v1/owners/:id')
+    Public method getById() as Logical
+
+    @Post("/api/v1/owners")
+	Public Method post() as Logical
+
+	@Put("/api/v1/owners/:id")
+	Public Method put() as Logical
+
+    @Delete("/api/v1/owners/:id")
+	Public Method delete() as Logical
+
+EndClass
+
+Method new() as Object Class OwnersController
+
+    oService := OwnersService:New()
+    ::jResponse := JsonObject:New()
+
+Return self
+
+Method get() as Logical Class OwnersController
+
+    Local cFields   as Character
+    Local cSort     as Character
+    Local cFilter   as Character
+    Local nPage     as Character
+    Local nPageSize as Character
+
+    cFields   := utils.getQueryParam('FIELDS')
+    cSort     := utils.getQueryParam('SORT')
+    cFilter   := utils.getQueryParam('FILTER')
+    nPage     := utils.getQueryParam('page')
+    nPageSize := utils.getQueryParam('pageSize')
+
+    oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
+    oRest:setResponse(::oService:get(Val(nPage),Val(nPageSize),cFilter,cFields,cSort))
+
+Return .T.
+
+Method getById() as Logical Class OwnersController
+    Local cId as Character
+    Local cFields as Character
+
+    cFields := utils.getQueryParam('FIELDS')
+
+    oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
+    cId := oRest:getPathParamsRequest()['id']
+    oRest:setResponse(::oService:get(1,10,/*cFilter*/,cFields,/*cSort*/,cId))
+
+Return .T.
+
+Method post() as Logical Class OwnersController
+	Local cBody as Character
+	Local jBody as Json
+
+	oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
+
+	cBody := oRest:getBodyRequest()
+	jBody := JsonObject():New()
+
+	If jBody:FromJson(cBody) == Nil
+		oRest:setResponse(::oService:post(3, jBody))
+	Else
+		setRestFault(400, "Json inválido")
+	EndIf
+Return .T.
+
+Method put() as Logical Class OwnersController
+	Local cBody as Character
+	Local jBody as Json
+	Local cId as Character
+
+	oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
+
+	cId := oRest:getPathParamsRequest()['id']
+	cBody := oRest:getBodyRequest()
+	jBody := JsonObject():New()
+
+	If jBody:FromJson(cBody) == Nil
+		oRest:setResponse(::oService:put(4, jBody, cId))
+	Else
+		setRestFault(400, "Json inválido")
+	EndIf
+Return .T.
+
+Method delete() as Logical Class OwnersController
+	Local cId as Character
+
+	oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
+
+	cId := oRest:getPathParamsRequest()['id']
+	oRest:setResponse(::oService:delete(5, cId))
+Return .T.

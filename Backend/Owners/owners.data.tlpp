@@ -17,10 +17,12 @@ Class OwnersData From FWAdapterBaseV2
 
     Public method new() as Object
     Public method get()
+    Public method handleOwners() as Logical
+    Public method setHashFields()
 
 EndClass
 
-Method new(as Character) as Object Class OwnersData
+Method new(cVerb as Character) as Object Class OwnersData
 
     //Método construtor da classe
     _Super:new(cVerb,.T.) //Parametros: Verbo Rest utilizado no adapter; Se irá listar o json
@@ -49,19 +51,37 @@ Static Function AddMapFields(oSelf as Object)
 Return Nil
 
 //nPage - Pagina a ser retornada; nPageSize quantidade de registros por pagina; 
-//cFilter queryParam dos Filter; cFilds campos; cSort ordem; cOwnerId retorno pelo Id;
+//cFilter queryParam dos Filter; cFields campos; cSort ordem; cOwnerId retorno pelo Id;
 Method get(nPage as Numeric, nPageSize as Numeric, cFilter as Character,;
-           cFilds as Character, cSort as Character, cOwnerId as Character) Class OwnersData
+           cFields as Character, cSort as Character, cOwnerId as Character) Class OwnersData
 
     Local aArea as Array
     Local cWhere as Character
-    Local aFilter := {} as Array
+    Local aFilter as Array
+    aFilter := {}
 
-    cWhere := " ZSB_FILIAL = '" + FWXFilial('ZSB') + "' AND D_E_L_E_T_ = '' "
+    if Empty(cOwnerId)
+        cWhere := " ZSB_FILIAL = '" + FWXFilial('ZSB') + "' AND D_E_L_E_T_ = '' "
+    else
+        cWhere :=  " ZSB_ID = '" +cOwnerId+ "' AND ZSB_FILIAL = '" + FWXFilial('ZSB') + "' AND D_E_L_E_T_ = '' "
+    endif
 
     aArea := FWGetArea()
 
     AddMapFields(self) //DePara campos
+
+    if !Empty(cFilter)
+        aAdd(aFilter,{'FILTER',cFilter})
+        ::SetUrlFilter(aFilter) //Propriedade do FWAdapterBaseV2
+    endif
+
+    if !Empty(cFields)
+        ::SetFields(cFields)
+    endif
+
+    if !Empty(cSort)
+        ::SetOrderQuery(cSort)
+    endif
 
     //Chamada de Metodos da Classe da FWAdapterBaseV2
     ::SetPage(nPage)
@@ -74,4 +94,66 @@ Method get(nPage as Numeric, nPageSize as Numeric, cFilter as Character,;
         ::FilGetResponse() //Método chamado linha a linha do ResultSet para geração do Json
     endif
 
+    RestArea( aArea )
+	aSize( aArea, 0 )
+
 Return Nil
+
+Method handleOwners(nOperation as Numeric, jBody as Json, cOwnerId as Character) as Logical Class OwnersData
+    Local oModel	as Object
+	Local oModelZSB	as Object
+    Local lRet as Logical
+    Local aData as Array
+    
+    lRet := .T.
+    ::setHashFields()
+
+    If nOperation <> 5
+        aData := utils.u_buildData(jBody, self)
+	Endif
+
+    If nOperation <> 3
+        If !utils.u_searchRecord(cOwnerId, 'ZSB')
+            lRet := .F.
+            Return SetResponse(lRet)
+        EndIf
+    EndIf
+
+    oModel := FWLoadModel("MPETS002")
+    oModelZSB := oModel:GetModel("ZSBMASTER")
+    utils.u_setOperationModel(oModel, nOperation)
+
+    oModel:Activate()
+    If oModel:IsActive()
+        If oModel:GetOperation() <> MODEL_OPERATION_DELETE
+            lRet := utils.u_setValue(aData, oModelZSB, 'ZSB')
+		Endif
+    Else
+        lRet := .F.        
+    EndIf
+
+    If !lRet .Or. !( oModel:VldData() .And. oModel:CommitData() )
+		lRet := .F.
+        SetRestFault(400, utils.u_getError(oModel:GetErrorMessage()))
+	Endif
+
+	oModel:DeActivate()
+	FreeObj(oModelZSB)
+	FreeObj(oModel)
+Return SetResponse(lRet)
+
+Static Function SetResponse(lRet as Logical) as Json //Retorno Json
+    Local jResponse as Json
+
+    If lRet
+        jResponse := JsonObject():New()
+
+        jResponse['id'] := RTrim(ZSB->ZSB_ID)
+        jResponse['name'] := FwHttpEncode(RTrim(ZSB->ZSB_NAME))
+        jResponse['rg'] := RTrim(ZSB->ZSB_RG)
+        jResponse['cpf'] := RTrim(ZSB->ZSB_CPF)
+        jResponse['email'] := FwHttpEncode(RTrim(ZSB->ZSB_EMAIL))
+        jResponse['tel1'] := RTrim(ZSB->ZSB_TEL1)
+        jResponse['tel2'] := RTrim(ZSB->ZSB_TEL2)
+    EndIf
+Return jResponse

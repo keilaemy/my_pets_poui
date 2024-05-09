@@ -1,0 +1,79 @@
+/**
+ * @ Author: Keila Emy Taniguchi
+ * @ Create Time: 2024-05-05 16:05:14
+ * @ Description: Projeto POUI TOTVS
+ */
+
+#include "tlpp-core.th"
+#include "FWMVCDEF.CH"
+
+namespace owners //identificação do fonte
+
+Class OwnersService
+
+    Public Data jResponse as Json
+    Public method new() as Object
+    Public method get() as Json
+    Public method post() as Json
+    Public method put() as Json
+    Public method delete() as Json
+
+EndClass
+
+Method new() as Object Class OwnersService
+    ::jResponse := JsonObject():New() //Criando Json vazio
+Return Self
+
+Method get(nPage as Numeric, nPageSize as Numeric, cFilter as Character,;
+           cFields as Character, cSort as Character, cOwnerId as Character) as Json Class OwnersService
+
+    Local oData as Object
+
+    oData := OwnersData():New("GET")
+    oData:get(nPage,nPageSize,cFilter,cFields,cSort,cOwnerId)
+
+    if oData:lOk // lOk Propriedade da FWAdapterBaseV2
+        ::jResponse := oData:gtJsonObjResponse() // gtJsonObjResponse Propriedade da FWAdapterBaseV2
+        if Empty(cOwnerId) .AND. Len(::jResponse['items']) > 0
+            ::jResponse := ::jResponse['items'][1] //quando o retorno é pelo getbyid
+        endif
+    else 
+        ::jResponse := SetRestFault(oData:GetCode(),oData:GetMessage()) //Em caso de erro, exibe o numero e a mensagem de erro
+    endif
+
+Return ::jResponse
+
+Method post(nOperation as Numeric, jBody as Json) as Json Class OwnersService
+    Local oData as Object
+
+    oData := OwnersData():new("POST")
+    ::jResponse := oData:handleOwners(nOperation, jBody)
+
+    If !oData:lOk
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
+
+Method put(nOperation as Numeric, jBody as Json, cOwnerId as Character) as Json Class OwnersService
+    Local oData as Object
+
+    oData := OwnersData():new("PUT")
+    ::jResponse := oData:handleOwners(nOperation, jBody, cOwnerId)
+
+    If !oData:lOk
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
+
+Method delete(nOperation as Numeric, cOwnerId as Character) as Json Class OwnersService
+    Local oData as Object
+
+    oData := OwnersData():new("DELETE")
+    oData:handleOwners(nOperation,, cOwnerId)
+
+    If oData:lOk
+        ::jResponse := oData:GetJsonObject()
+    Else
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
