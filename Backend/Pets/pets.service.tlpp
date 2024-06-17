@@ -1,0 +1,69 @@
+#include "tlpp-core.th"
+
+namespace pets
+
+Class PetsService
+    Public Data jResponse as Json
+
+    Public method new() as Object
+    Public method get() as Json
+    Public method post() as Json
+    Public method put() as Json
+    Public method delete() as Json
+EndClass
+
+Method new() as Object Class PetsService
+    ::jResponse := JsonObject():New()
+Return Self
+
+Method get(nPage as Numeric, nPageSize as Numeric, cFilter as Character,;
+    cFields as Character, cSort as Character, cPetId as Character) as Json Class PetsService
+    Local oData as Object
+
+    oData := PetsData():new("GET")
+    oData:get(nPage, nPageSize, cFilter, cFields, cSort, cPetId)
+
+    If oData:lOk
+        ::jResponse := oData:gtJsonObjResponse()
+        If !Empty(cPetId) .And. Len(::jResponse['items']) > 0
+            ::jResponse := ::jResponse['items'][1]
+        EndIf
+    Else
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
+
+Method post(nOperation as Numeric, jBody as Json) as Json Class PetsService
+    Local oData as Object
+
+    oData := PetsData():new("POST")
+    ::jResponse := oData:handlePets(nOperation, jBody)
+
+    If !oData:lOk
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
+
+Method put(nOperation as Numeric, jBody as Json, cPetId as Character) as Json Class PetsService
+    Local oData as Object
+
+    oData := PetsData():new("PUT")
+    ::jResponse = oData:handlePets(nOperation, jBody, cPetId)
+
+    If !oData:lOk
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse
+
+Method delete(nOperation as Numeric, cPetId as Character) as Json Class PetsService
+    Local oData as Object
+
+    oData := PetsData():new("DELETE")
+    oData:handlePets(nOperation,, cPetId)
+
+    If oData:lOk
+        ::jResponse := oData:GetJsonObject()
+    Else
+        ::jResponse := SetRestFault(oData:GetCode(), oData:GetMessage())
+    EndIf
+Return ::jResponse

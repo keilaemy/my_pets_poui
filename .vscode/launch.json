@@ -14,5 +14,11 @@
 				"charDetails": false
 			}
 		}
-	]
+	],
+	"lastPrograms": [
+		{
+			"label": "u_AddRec"
+		}
+	],
+	"lastProgramExecuted": "u_AddRec"
 }

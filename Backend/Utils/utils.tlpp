@@ -1,46 +1,33 @@
-/**
- * @ Author: Keila Emy Taniguchi
- * @ Create Time: 2024-04-07 23:27:13
- * @ Description: Projeto POUI TOTVS
-*/
-
-#include "tlpp-core.th"
+#include 'tlpp-core.th'
 #include "FWMVCDEF.CH"
 
 namespace utils
 
-Function getQuery(cTable as Character) as Character
-
-    Local cQuery as Character
-
-    //#QueryFields# Retorna todos os campos descritos na AddMapFields
-    //#QueryWhere# Retorna a query descrita no SetWhere
-
-    cQuery :=  " SELECT #QueryFields# FROM " + RetSqlName(cTable) + " " + cTable
-    cQuery :=  " WHERE #QueryWhere# "
-
-Return cQuery
-
-
-Function getQueryParam(cName as Character) as Character
-
+// Função para pegar os queryParam - Filter
+User Function getQueryParam(cName as Character) as Character
     Local cParamText as Character
 
-    cParamText := oRest:getQueryRequest():GetJsonText(cName) //Busca pelo filter e retorna o texto da propriedade
-
-    if cParamText == 'null'
-        if cName == 'page'
+    cParamText := oRest:getQueryRequest():GetJsonText(cName)
+    If cParamText == 'null'
+        If cName == 'page'
             cParamText := '1'
-        elseif cName == 'pageSize'
+        ElseIf cName == 'pageSize'
             cParamText := '10'
-        else
+        Else
             cParamText := ''
-        endif
-    endif
-
-
+        EndIf
+    EndIf
 Return cParamText
 
+// Função que retorna a query de acordo com a tabela
+User Function getQuery(cTable as Character) as Character
+    Local cQuery as Character
+
+    cQuery := "SELECT #QueryFields# FROM " + RetSqlName(cTable) + " " + cTable
+    cQuery += " WHERE #QueryWhere#"
+Return cQuery
+
+// Função que procura pelo registro de acordo com a tabela
 User Function searchRecord(cId as Character, cTable as Character) as Logical
     Local lRet as Logical
 
@@ -54,6 +41,7 @@ User Function searchRecord(cId as Character, cTable as Character) as Logical
     EndIf
 Return lRet
 
+// Função que seta a operação no modelo
 User Function setOperationModel(oModel as Object, nOperation as Numeric)
     If nOperation == 3
 		oModel:SetOperation(MODEL_OPERATION_INSERT)
@@ -64,6 +52,7 @@ User Function setOperationModel(oModel as Object, nOperation as Numeric)
 	Endif
 Return Nil
 
+// Função que seta os valores a serem incluídos/alterados no modelo
 User Function setValue(aData as Array, oModel as Object, cTable as Character) as Logical
     Local nX as Numeric
     Local lRet as Logical
@@ -91,6 +80,7 @@ User Function getError(aMsgError as Array)
     Next
 Return cError
 
+// Função que faz o de para das informações de acordo com o HashFields
 User Function buildData(jBody as Json, oResource as Object) as Array
     Local aData as Array
     Local aFields as Array

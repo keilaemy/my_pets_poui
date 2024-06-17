@@ -1,44 +1,44 @@
 #include 'tlpp-core.th'
 
-namespace owners
+namespace pets
 
-Class OwnersController
+Class PetsController
 	Data jResponse  as Json
 	Data oService   as Object
 
 	Public Method new() as Object
 
-	@Get("/api/v1/owners")
+	@Get("/api/v1/pets")
 	Public Method get() as Logical
 
-	@Get("/api/v1/owners/:id")
+	@Get("/api/v1/pets/:id")
 	Public Method getById() as Logical
 
-	@Post("/api/v1/owners")
+	@Post("/api/v1/pets")
 	Public Method post() as Logical
 
-	@Put("/api/v1/owners/:id")
+	@Put("/api/v1/pets/:id")
 	Public Method put() as Logical
 
-	@Delete("/api/v1/owners/:id")
+	@Delete("/api/v1/pets/:id")
 	Public Method delete() as Logical
 EndClass
 
-Method new() as Object Class OwnersController
-	::oService  := OwnersService():new()
+Method new() as Object Class PetsController
+	::oService  := PetsService():new()
 	::jResponse := JsonObject():new()
 Return self
 
-Method get() as Logical Class OwnersController
+Method get() as Logical Class PetsController
 	Local cFields as Character
 	Local cSort as Character
 	Local cFilter as Character
 	Local nPage as Numeric
 	Local nPageSize as Numeric
 
-	cFields := utils.u_getQueryParam('FIELDS')
-	cSort := utils.u_getQueryParam('SORT')
-	cFilter := utils.u_getQueryParam('FILTER')
+	cFields := utils.u_getQueryParam('fields')
+	cSort := utils.u_getQueryParam('sort')
+	cFilter := utils.u_getQueryParam('filter')
 	nPage := utils.u_getQueryParam('page')
 	nPageSize := utils.u_getQueryParam('pageSize')
 
@@ -46,7 +46,7 @@ Method get() as Logical Class OwnersController
 	oRest:setResponse(::oService:get(Val(nPage), Val(nPageSize), cFilter, cFields, cSort))
 Return .T.
 
-Method getById() as Logical Class OwnersController
+Method getById() as Logical Class PetsController
 	Local cId as Character
 	Local cFields as Character
 
@@ -56,7 +56,8 @@ Method getById() as Logical Class OwnersController
 	cId := oRest:getPathParamsRequest()['id']
 	oRest:setResponse(::oService:get(1, 10, /* cFilter */, cFields, /* cSort */, cId))
 Return .T.
-Method post() as Logical Class OwnersController
+
+Method post() as Logical Class PetsController
 	Local cBody as Character
 	Local jBody as Json
 
@@ -70,9 +71,9 @@ Method post() as Logical Class OwnersController
 	Else
 		setRestFault(400, "Json inválido")
 	EndIf
-Return .T.
+Return
 
-Method put() as Logical Class OwnersController
+Method put() as Logical Class PetsController
 	Local cBody as Character
 	Local jBody as Json
 	Local cId as Character
@@ -89,8 +90,7 @@ Method put() as Logical Class OwnersController
 		setRestFault(400, "Json inválido")
 	EndIf
 Return .T.
-
-Method delete() as Logical Class OwnersController
+Method delete() as Logical Class PetsController
 	Local cId as Character
 
 	oRest:setKeyHeaderResponse('Content-Type','application/json; charset=utf-8')
